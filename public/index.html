@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Blog Forum Ana sayfası</h1>
+    <p>
+        Backend bağlantı testi yapılacak 
+    </p>
+    <button id = testButton>
+        Backende Bağlan 
+    </button>
+    <div id = response>
+
+    </div>
+
+    <script>
+    document.getElementById('testButton').addEventListener('click', () => {
+      fetch('http://localhost:5000/')
+        .then(res => res.text())
+        .then(text => {
+          document.getElementById('response').innerText = text;
+        })
+        .catch(err => {
+          document.getElementById('response').innerText = 'Bağlantı hatası: ' + err;
+        });
+    });
+  </script>
+  
+</body>
+</html>
