@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt') ;
 const jwt = require('jsonwebtoken') ; 
 const authMiddleware = require("./services/authMiddleware"); 
 const req = require('express/lib/request');
-
+const mongoose = require('mongoose') ;
 const app = express() ;
 const PORT = 5000 ;
 app.use(express.static('public') ) ; 
@@ -17,6 +17,13 @@ const KEY = "gizli-key" ;
 
 const users = [] ; 
 const posts =[] ; 
+
+mongoose.connect('mongodb://127.0.0.1:27017/blogdb', { 
+  useNewUrlParser: true, 
+  useUnifiedTopology: true 
+})
+.then(() => console.log("MongoDB'ye bağlandı"))
+.catch(err => console.error("MongoDB bağlantı hatası:", err));
 
  // ! ---------- REGISTER --------------
 
