@@ -1,0 +1,12 @@
+const mongoose = require('mongoose')  ;
+const User = require('./User');
+
+const postSchema = new mongoose.Schema({
+    title : {type : String, required : true }, 
+    content : {type: String, required: true} ,
+    authorId : {type : mongoose.Schema.ObjectId , ref: 'User', required: true} ,
+    authorUsername : {type: String , required : true} 
+
+}, {timestamps: true}) ;
+
+module.exports= mongoose.model('Post', postSchema) ; 
