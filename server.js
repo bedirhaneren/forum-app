@@ -4,6 +4,7 @@ const cors = require('cors') ;
 const bcrypt = require('bcrypt') ; 
 const jwt = require('jsonwebtoken') ; 
 const authMiddleware = require("./services/authMiddleware"); 
+const req = require('express/lib/request');
 
 const app = express() ;
 const PORT = 5000 ;
@@ -105,11 +106,40 @@ app.get('/posts', (req, res) => {
 
 app.get('/posts/:id' , (req, res) => {
   const id = Number(req.params.id) ; 
-  const posts = posts.find(p=> p.id === id) ; 
-  if (!posts) return res.status(404).json({message : "Post bulunamadi"}) ; 
+  const post = posts.find(p=> p.id === id) ; 
+  if (!post) return res.status(404).json({message : "Post bulunamadi"}) ; 
   res.json(post) ; 
 })
 
+app.put('/posts/:id',authMiddleware, (req, res) => {
+  const id = Number(req.params.id) ; 
+  const post = post.find (p=> p.id === id)  ;
+  if (!post) return res.status(404).json({message : "Post bulunamadı"}) ; 
+
+  if (req.authorId !== req.user.id)
+    return res.status(403).json({message : " Bu gönderiyi düzenleme hakkınız yok"}) ; 
+const {title, content } = req.body ;
+if (title ) post.title= title ; 
+if(content) post.content = content ; 
+post.updatedAt = new Date() ; 
+res.json(post) ; 
+ }) ;
+
+app.delete('posts/:id' ,authMiddleware , (req, res) => {
+  const id = Number(req.params.id)  ;
+  const post = post.find(p=> p.id === id) ; 
+  if(!post) return res.status(404).json({message : "Post bulunamadı."}) ;
+
+  if (req.authorId !== req.user.id)
+  {
+    return res.status(403).json({message : "Bu gönderiyi silme hakkınız yok "}) ; 
+  }
+
+  posts.splice(idx, 1) ; 
+
+  return res.status(200).json({message : "Post silindi."}) ; 
+
+} )
 
 app.get('/' , (req, res) => {
     res.send("Merhaba blog forum api") ;
