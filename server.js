@@ -19,8 +19,6 @@ app.use(bodyParser.json()) ;
 
 const KEY = "gizli-key" ; 
 
-const users = [] ; 
-const posts =[] ; 
 
 mongoose.connect('mongodb://127.0.0.1:27017/blogdb', { 
   useNewUrlParser: true, 
@@ -43,7 +41,13 @@ app.post ('/register',
   ],
   
   async (req, res) => {                   
+    const errors = validationResult(req) ; 
+    if (!errors.isEmpty())
+      {
+        return res.status(400).json({errors : errors.array()}); 
+      } 
     const {email , password, username} = req.body ; 
+    
 
   if (!email || !password || !username) {
     return res.status(400).json({ message: 'Lütfen email, username ve password girin.' });
@@ -104,7 +108,7 @@ app.post('/login' ,
 
 
 // ! ------------- Post oluşturma -------------------
-const Posts = require("./models/Posts") ; 
+const Post = require("./models/Posts") ; 
 
 app.post("/posts", authMiddleware , 
   [ 
@@ -172,6 +176,49 @@ await post.deleteOne() ;
 
 } )
 
+app.post ("/posts/:postId/comments" , authMiddleware ,
+  [
+    body('content').notEmpty().withMessage('Yorum boş kalamaz')
+  ]  ,
+async (req , res) => {
+  const errors = validationResult(req) ; 
+  if (! errors.isEmpty())
+  {
+    return res.status(400).json({errors : error.array()}) ; 
+  }
+
+  const postId = req.params.postId ; 
+  const content = req.params.content ; 
+
+  const post = await Post.findById(postId)  ;
+  if (! post) return res.status(404).json({message : 'Post bulunamadı'
+  });
+
+  const comment = new Comment ({
+
+    postId,
+    authorId : req.user.id, 
+    authorUsername: req.user.username, 
+    content
+  }) ; 
+
+  await comment.save() ; 
+
+  res.status(201).json({message: "Yorum başarıyla gönderildi"}); 
+
+})
+
+// ! Bir postun tüm yorumları ------------ 
+app.get('/posts/postId/comments', async (req, res) => 
+{
+  const postId = req.params.postId ;
+  const comments = await Comment.find({ postId }).sort({ createdAt: -1 });
+
+  res.json(comments) ;
+}
+
+
+)
 app.get('/' , (req, res) => {
     res.send("Merhaba blog forum api") ;
 
