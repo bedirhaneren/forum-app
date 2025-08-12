@@ -9,6 +9,9 @@ const mongoose = require('mongoose') ;
 const timespan = require('jsonwebtoken/lib/timespan');
 const app = express() ;
 const PORT = 5000 ;
+
+const  {body , validationResult} = require('express-validator') ;
+
 app.use(express.static('public') ) ; 
 
 app.use(cors()) ; 
@@ -31,9 +34,15 @@ mongoose.connect('mongodb://127.0.0.1:27017/blogdb', {
  // ! ---------- REGISTER --------------
 
  const User= require("./models/User")  ;
-
-
-app.post ('/register', async (req, res) => {
+  
+app.post ('/register', 
+  [
+    body('email').isEmail().withMessage("Gecerli bir email girin."),
+    body('password').isLength().withMessage("Şifre 6 karakterden kısa olamaz"),
+    body('username').notEmpty().withMessage("Kullanıcı adı boş olamaz") 
+  ],
+  
+  async (req, res) => {                   
     const {email , password, username} = req.body ; 
 
   if (!email || !password || !username) {
@@ -60,7 +69,13 @@ await newUser.save() ;
 // ! ----------LOGIN --------------------------
 
 
-app.post('/login' , async (req, res) => {
+app.post('/login' ,
+  [
+    body('email').isEmail().withMessage("Lütfen geçerli bir email girin"), 
+    body('password').notEmpty().withMessage("Şifre boş olamaz")
+  ],
+  
+  async (req, res) => {
 
   const {email, password} = req.body  ; 
 
@@ -91,7 +106,13 @@ app.post('/login' , async (req, res) => {
 // ! ------------- Post oluşturma -------------------
 const Posts = require("./models/Posts") ; 
 
-app.post("/posts", authMiddleware , async (req,res)=>{
+app.post("/posts", authMiddleware , 
+  [ 
+    body('title').notEmpty().withMessage("Başlık boş kalamaz"),
+    body('content').notEmpty().withMessage("Content boş kalamaz")
+  ],
+  
+  async (req,res)=>{
   const {title ,content}= req.body ; 
   if (!title || !content) return res.status(400).json({ message: 'Title ve content gerekli.' });
 
@@ -159,3 +180,6 @@ app.get('/' , (req, res) => {
 app.listen(PORT, () => {
 console.log(`Server ${PORT} portunda calısıyor`);
 } ); 
+
+
+
