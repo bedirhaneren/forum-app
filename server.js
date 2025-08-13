@@ -215,10 +215,51 @@ app.get('/posts/postId/comments', async (req, res) =>
   const comments = await Comment.find({ postId }).sort({ createdAt: -1 });
 
   res.json(comments) ;
+},
+
+// !!   Like atma route 
+app.post('/posts/:id/like', authMiddleware, async (req, res) => {
+  const postId = req.params.postId ; 
+  const post = await Post.findById(postId) ; 
+    if (! post) return res.status(404).json({message : 'Post bulunamadı'
+  });
+ // ? mongodb den objectId döndüğü için tostring kullan
+  post.dislikes= post.dislikes.filter(userId => userId.toString() !== req.user.id) ;
+  
+  if (post.likes.includes(req.user.id) ){
+  post.likes = post.likes.filter(id => id.toString()!==req.user.id) ;
+  }
+  else {
+    post.likes.push(req.user.id); 
+  }
+  await post.save() ;
+  res.json({likes: post.likes.length(), dislikes: post.dislikes.length()}) ; 
+}),
+
+app.post ('/post/:id/dislike', authMiddleware, async (req,res) => {
+  const postId = req.params.postId ; 
+  const post= await Post.findById(postId) ;
+  if (!post) return res.status(404).json({message: "Post bulunamadı"}) ; 
+
+  post.likes= post.likes.filter(userId => userId.toString() !== req.user.id) ; 
+
+//? userId.toString() !== req.user.id koşulu true ise bu eleman yeni array’e dahil ediliyor değilse çıkarılıyor.
+  if (post.dislikes.includes(req.user.id) )
+  {
+    post.dislikes= post.dislikes.filter(id => id.toString()!== req.user.id);
+
+  }
+else{
+  post.dislikes.push(req.user.id); 
 }
+await post.save() ;
+
+res.json({likes : post.likes.length(), dislikes : post.dislikes.length()}); 
+
+})
 
 
-)
+) 
 app.get('/' , (req, res) => {
     res.send("Merhaba blog forum api") ;
 
