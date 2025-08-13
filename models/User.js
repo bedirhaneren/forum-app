@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   avatar: {type: String , required : Option},
   bio : {type: String , required : Option},
-  role: {type : String, default : "user"},
+  role: {type : String, enum : ['user' , 'mod' , 'admin'], default : "user"},
   followers: {type : mongoose.Schema.ObjectId},
   following: {type: mongoose.Schema.ObjectId}
 }, { timestamps: true });

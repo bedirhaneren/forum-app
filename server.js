@@ -4,12 +4,13 @@ const cors = require('cors') ;
 const bcrypt = require('bcrypt') ; 
 const jwt = require('jsonwebtoken') ; 
 const authMiddleware = require("./services/authMiddleware"); 
+const roleMiddleware = require("./services/roleMiddleware") ;
 const req = require('express/lib/request');
 const mongoose = require('mongoose') ;
 const timespan = require('jsonwebtoken/lib/timespan');
 const app = express() ;
 const PORT = 5000 ;
-
+const Comment = require("./models/Comment") ;
 const  {body , validationResult} = require('express-validator') ;
 
 app.use(express.static('public') ) ; 
@@ -161,20 +162,20 @@ app.put('/posts/:id',authMiddleware, async (req, res) => {
 res.json(post) ; 
  }) ;
 
-app.delete('/posts/:id' ,authMiddleware , async (req, res) => {
+app.delete('/posts/:id', authMiddleware, async (req, res) => {
   const post = await Post.findById(req.params.id);
 
-  if(!post) return res.status(404).json({message : "Post bulunamadı."}) ;
+  if (!post) return res.status(404).json({ message: "Post bulunamadı." });
 
-  if (req.authorId !== req.user.id)
-  {
-    return res.status(403).json({message : "Bu gönderiyi silme hakkınız yok "}) ; 
+  // Sadece post sahibi veya admin/mod silebilir
+  if (post.authorId.toString() !== req.user.id && !['admin', 'mod'].includes(req.user.role)) {
+    return res.status(403).json({ message: "Bu gönderiyi silme hakkınız yok" });
   }
 
-await post.deleteOne() ;
-  return res.status(200).json({message : "Post silindi."}) ; 
+  await post.deleteOne();
+  res.status(200).json({ message: "Post silindi." });
+});
 
-} )
 
 app.post ("/posts/:postId/comments" , authMiddleware ,
   [
@@ -184,11 +185,11 @@ async (req , res) => {
   const errors = validationResult(req) ; 
   if (! errors.isEmpty())
   {
-    return res.status(400).json({errors : error.array()}) ; 
+    return res.status(400).json({errors : errors.array()}) ; 
   }
 
   const postId = req.params.postId ; 
-  const content = req.params.content ; 
+  const content = req.body.content ; 
 
   const post = await Post.findById(postId)  ;
   if (! post) return res.status(404).json({message : 'Post bulunamadı'
@@ -209,7 +210,7 @@ async (req , res) => {
 })
 
 // ! Bir postun tüm yorumları ------------ 
-app.get('/posts/postId/comments', async (req, res) => 
+app.get('/posts/:postId/comments', async (req, res) => 
 {
   const postId = req.params.postId ;
   const comments = await Comment.find({ postId }).sort({ createdAt: -1 });
@@ -221,7 +222,7 @@ app.get('/posts/postId/comments', async (req, res) =>
 app.post('/posts/:id/like', authMiddleware, async (req, res) => {
   const postId = req.params.postId ; 
   const post = await Post.findById(postId) ; 
-    if (! post) return res.status(404).json({message : 'Post bulunamadı'
+    if (! post) return res.status(404).json({message : 'Post bulunamadı' 
   });
  // ? mongodb den objectId döndüğü için tostring kullan
   post.dislikes= post.dislikes.filter(userId => userId.toString() !== req.user.id) ;
@@ -233,7 +234,7 @@ app.post('/posts/:id/like', authMiddleware, async (req, res) => {
     post.likes.push(req.user.id); 
   }
   await post.save() ;
-  res.json({likes: post.likes.length(), dislikes: post.dislikes.length()}) ; 
+  res.json({likes: post.likes.length, dislikes: post.dislikes.length}) ; 
 }),
 
 app.post ('/post/:id/dislike', authMiddleware, async (req,res) => {
@@ -254,7 +255,7 @@ else{
 }
 await post.save() ;
 
-res.json({likes : post.likes.length(), dislikes : post.dislikes.length()}); 
+res.json({likes : post.likes.length, dislikes : post.dislikes.length}); 
 
 })
 
@@ -267,12 +268,12 @@ app.put ('/users/me', authMiddleware,
   body('password').optional().isLength({ min: 6 }).withMessage('Şifre en az 6 karakter olmalı'),
   ],
   async (req,res) => {
-  errors= validationResult(req.body) ; 
+  errors= validationResult(req) ; 
    if (!errors.isEmpty())
       {
         return res.status(400).json({errors : errors.array()}); 
       } 
-  const user =  await Users.findById(req.user.id) ; 
+  const user =  await User.findById(req.user.id) ; 
   if (!user) return res.status(404).json({message: "Kullanıcı bulunamadı"} ); 
   if (user.id != req.user.id) return res.status(403).json({message: "Bu profili düzenlemeye yetkiniz yok"} );
 
@@ -288,6 +289,7 @@ app.put ('/users/me', authMiddleware,
   res.json(user) ;
 
 })
+
 app.get('/' , (req, res) => {
     res.send("Merhaba blog forum api") ;
 
