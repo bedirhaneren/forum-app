@@ -258,8 +258,36 @@ res.json({likes : post.likes.length(), dislikes : post.dislikes.length()});
 
 })
 
-
 ) 
+
+app.put ('/users/me', authMiddleware, 
+  [
+  body('email').optional().isEmail().withMessage('Geçerli bir email girin'),
+  body('username').optional().isLength({ min: 3 }).withMessage('Kullanıcı adı en az 3 karakter olmalı'),
+  body('password').optional().isLength({ min: 6 }).withMessage('Şifre en az 6 karakter olmalı'),
+  ],
+  async (req,res) => {
+  errors= validationResult(req.body) ; 
+   if (!errors.isEmpty())
+      {
+        return res.status(400).json({errors : errors.array()}); 
+      } 
+  const user =  await Users.findById(req.user.id) ; 
+  if (!user) return res.status(404).json({message: "Kullanıcı bulunamadı"} ); 
+  if (user.id != req.user.id) return res.status(403).json({message: "Bu profili düzenlemeye yetkiniz yok"} );
+
+  if (req.body.email) user.email= req.body.email ;
+  if (req.body.username) user.username = req.body.username ; 
+  if (req.body.password)
+    {
+      user.password = await bcrypt.hash(req.body.password, 10) ;
+    } 
+
+  await user.save() ;
+  
+  res.json(user) ;
+
+})
 app.get('/' , (req, res) => {
     res.send("Merhaba blog forum api") ;
 
