@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Kayıt Ol</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="form-container">
+  <h2>Kayıt Ol</h2>
+  <input type="text" id="username" placeholder="Kullanıcı Adı">
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Şifre">
+  <button onclick="register()">Kayıt Ol</button>
+  <p id="message"></p>
+</div>
+
+<script>
+async function register() {
+  const username = document.getElementById('username').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+
+  const res = await fetch('http://localhost:5000/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, email, password })
+  });
+
+  const data = await res.json();
+  document.getElementById('message').innerText = data.message || JSON.stringify(data);
+
+  if (res.ok) {
+    // Başarılı olursa giriş sayfasına git
+    setTimeout(() => {
+      window.location.href = 'login.html';
+    }, 1000);
+  }
+}
+</script>
+</body>
+</html>
