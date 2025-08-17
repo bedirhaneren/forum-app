@@ -1,71 +1,31 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>Forum Ana Sayfa</title>
-  <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyForum</title>
 </head>
 <body>
+    <!-- Ortak Header -->
+    <header>
+        <div class="container">
+            <h1 class="logo">MyForum</h1>
+            <nav>
+                <a href="#home" onclick="showPage('home')">Ana Sayfa</a>
+                <a href="#categories" onclick="showPage('categories')">Kategoriler</a>
+                <a href="#new-topic" onclick="showPage('new-topic')">Yeni Konu</a>
+                <a href="#login" onclick="showPage('login')">Giriş Yap</a>
+                <a href="#register" onclick="showPage('register')" class="btn">Kayıt Ol</a>
+            </nav>
+        </div>
+    </header>
 
-  <header>
-    <div class="container">
-      <h1 class="logo">MyForum</h1>
-      <nav>
-        <a href="#">Ana Sayfa</a>
-        <a href="#">Kategoriler</a>
-        <a href="#">Yeni Konu</a>
-        <a href="login.html">Giriş Yap</a>
-        <a href="register.html" class="btn">Kayıt Ol</a>
-      </nav>
-    </div>
-  </header>
+    <!-- Sayfa İçerikleri -->
+    <main id="main-content">
+        <!-- Sayfa içerikleri buraya yüklenecek -->
+    </main>
 
-  <main class="container">
-    <section class="content">
-      <h2>Popüler Konular</h2>
-      <div class="post">
-        <h3><a href="#">Node.js ile Blog API Geliştirme</a></h3>
-        <p>Backend geliştirme üzerine detaylı bir anlatım...</p>
-        <span class="meta">Yazar: Admin | 15 cevap | 250 görüntüleme</span>
-      </div>
-      <div class="post">
-        <h3><a href="#">React mı Vue mü? Hangisini Seçmeli?</a></h3>
-        <p>Front-end dünyasında popüler iki framework’ün karşılaştırması...</p>
-        <span class="meta">Yazar: Ali | 8 cevap | 120 görüntüleme</span>
-      </div>
-      <div class="post">
-        <h3><a href="#">Python ile Veri Analizi</a></h3>
-        <p>Pandas, NumPy, Matplotlib kullanarak veri analizi örnekleri...</p>
-        <span class="meta">Yazar: Ayşe | 22 cevap | 320 görüntüleme</span>
-      </div>
-    </section>
-
-    <!-- Yan Panel -->
-    <aside class="sidebar">
-      <h2>Kategoriler</h2>
-      <ul>
-        <li><a href="#">Backend Geliştirme</a></li>
-        <li><a href="#">Frontend Geliştirme</a></li>
-        <li><a href="#">Veritabanı</a></li>
-        <li><a href="#">Makine Öğrenimi</a></li>
-        <li><a href="#">Genel Sohbet</a></li>
-      </ul>
-
-      <h2>En Aktif Kullanıcılar</h2>
-      <ul>
-        <li>Admin</li>
-        <li>Ali</li>
-        <li>Ayşe</li>
-        <li>Mehmet</li>
-      </ul>
-    </aside>
-  </main>
-
-  <footer>
-    <div class="container">
-      <p>&copy; 2025 MyForum. Tüm hakları saklıdır.</p>
-    </div>
-  </footer>
-
+    <script src="app.js"></script>
 </body>
 </html>
