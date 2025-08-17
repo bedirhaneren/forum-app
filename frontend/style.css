@@ -52,7 +52,7 @@ header nav a:hover {
 
 main {
   display: flex;
-  margin-top: 20px;
+  margin-top: 80px;
 }
 
 .content {
@@ -252,4 +252,88 @@ nav a.active {
 
 .new-topic-form button:hover {
     background: #e68a00;
+}
+
+/* Dashboard stilleri */
+.dashboard-content {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin: 20px auto;
+    max-width: 800px;
+}
+
+.dashboard-content h2 {
+    color: #333;
+    border-bottom: 3px solid #ff9800;
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+}
+
+.dashboard-content h3 {
+    color: #555;
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
+.user-info {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 6px;
+    margin-bottom: 25px;
+    border-left: 4px solid #ff9800;
+}
+
+.user-info p {
+    margin: 8px 0;
+    color: #666;
+}
+
+.dashboard-actions {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 6px;
+    margin-bottom: 25px;
+    border-left: 4px solid #4CAF50;
+}
+
+.dashboard-actions button {
+    margin: 5px 10px 5px 0;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    background: #4CAF50;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+.dashboard-actions button:hover {
+    background: #45a049;
+}
+
+.recent-activity {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 6px;
+    border-left: 4px solid #2196F3;
+}
+
+.recent-activity p {
+    color: #999;
+    font-style: italic;
+}
+
+.btn-logout {
+    background: #f44336 !important;
+    color: white !important;
+    padding: 6px 12px !important;
+    border-radius: 4px !important;
+}
+
+.btn-logout:hover {
+    background: #d32f2f !important;
+    text-decoration: none !important;
 }

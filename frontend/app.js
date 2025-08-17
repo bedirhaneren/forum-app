@@ -2,6 +2,8 @@ class PageManager {
     constructor() {
         // ! sınıf ilk calıstıgında calısır
         this.currentPage = 'home';  
+        this.isLoggedIn = false;
+        this.userInfo = null;
         this.init();
     }
 
@@ -13,6 +15,58 @@ class PageManager {
         window.addEventListener('hashchange', () => {
             this.handleHashChange();
         });
+
+        // Giriş durumunu kontrol et
+        this.checkLoginStatus();
+    }
+
+    checkLoginStatus() {
+        const token = localStorage.getItem('token');
+        if (token) {
+            this.isLoggedIn = true;
+            // jwt decode   
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                this.userInfo = {
+                    id: payload.id,
+                    email: payload.email
+                };
+                this.updateNavigation();
+            } catch (error) {
+                console.error('Token decode hatası:', error);
+                this.logout();
+            }
+        }
+    }
+
+    updateNavigation() {
+        const nav = document.querySelector('nav');
+        if (this.isLoggedIn) {
+            nav.innerHTML = `
+                <a href="#home" onclick="showPage('home')">Ana Sayfa</a>
+                <a href="#categories" onclick="showPage('categories')">Kategoriler</a>
+                <a href="#new-topic" onclick="showPage('new-topic')">Yeni Konu</a>
+                <a href="#dashboard" onclick="showPage('dashboard')">Dashboard</a>
+                <a href="#" onclick="handleLogout()" class="btn btn-logout">Çıkış Yap</a>
+            `;
+        } else {
+            nav.innerHTML = `
+                <a href="#home" onclick="showPage('home')">Ana Sayfa</a>
+                <a href="#categories" onclick="showPage('categories')">Kategoriler</a>
+                <a href="#new-topic" onclick="showPage('new-topic')">Yeni Konu</a>
+                <a href="#login" onclick="showPage('login')">Giriş Yap</a>
+                <a href="#register" onclick="showPage('register')" class="btn">Kayıt Ol</a>
+            `;
+        }
+        this.updateActiveNav(this.currentPage);
+    }
+
+    logout() {
+        localStorage.removeItem('token');
+        this.isLoggedIn = false;
+        this.userInfo = null;
+        this.updateNavigation();
+        this.showPage('home');
     }
 
     handleHashChange() {
@@ -32,6 +86,9 @@ class PageManager {
         const mainContent = document.getElementById('main-content');
         mainContent.innerHTML = this.getPageContent(pageName);
 
+        // Navigasyonu güncelle (giriş durumu değişmiş olabilir)
+        this.updateNavigation();
+        
         // Aktif nav linkini güncelle
         this.updateActiveNav(pageName);
     }
@@ -61,33 +118,59 @@ class PageManager {
                 return this.getCategoriesPage();
             case 'new-topic':
                 return this.getNewTopicPage();
+            case 'dashboard':
+                return this.getDashboardPage();
             default:
                 return this.getHomePage();
         }
     }
 
     getHomePage() {
-        return `
-            <div class="container">
-                <main>
-                    <div class="content">
-                        <div class="post">
-                            <h3><a href="#">Hoş Geldiniz!</a></h3>
-                            <p>MyForum'a hoş geldiniz. Tartışmalara katılmak için giriş yapın.</p>
-                            <div class="meta">Son güncelleme: Bugün</div>
+        if (this.isLoggedIn) {
+            return `
+                <div class="container">
+                    <main>
+                        <div class="content">
+                            <div class="post">
+                                <h3><a href="#">Hoş Geldiniz, ${this.userInfo.email}!</a></h3>
+                                <p>MyForum'a hoş geldiniz. Tartışmalara katılmak için dashboard'ı kullanabilirsiniz.</p>
+                                <div class="meta">Son güncelleme: Bugün</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="sidebar">
-                        <h2>Popüler Konular</h2>
-                        <ul>
-                            <li><a href="#">Teknoloji</a></li>
-                            <li><a href="#">Bilim</a></li>
-                            <li><a href="#">Sanat</a></li>
-                        </ul>
-                    </div>
-                </main>
-            </div>
-        `;
+                        <div class="sidebar">
+                            <h2>Popüler Konular</h2>
+                            <ul>
+                                <li><a href="#">Teknoloji</a></li>
+                                <li><a href="#">Bilim</a></li>
+                                <li><a href="#">Sanat</a></li>
+                            </ul>
+                        </div>
+                    </main>
+                </div>
+            `;
+        } else {
+            return `
+                <div class="container">
+                    <main>
+                        <div class="content">
+                            <div class="post">
+                                <h3><a href="#">Hoş Geldiniz!</a></h3>
+                                <p>MyForum'a hoş geldiniz. Tartışmalara katılmak için giriş yapın.</p>
+                                <div class="meta">Son güncelleme: Bugün</div>
+                            </div>
+                        </div>
+                        <div class="sidebar">
+                            <h2>Popüler Konular</h2>
+                            <ul>
+                                <li><a href="#">Teknoloji</a></li>
+                                <li><a href="#">Bilim</a></li>
+                                <li><a href="#">Sanat</a></li>
+                            </ul>
+                        </div>
+                    </main>
+                </div>
+            `;
+        }
     }
 
     getLoginPage() {
@@ -150,6 +233,42 @@ class PageManager {
             </div>
         `;
     }
+
+    getDashboardPage() {
+        if (!this.isLoggedIn) {
+            return `
+                <div class="container">
+                    <h2>Erişim Reddedildi</h2>
+                    <p>Bu sayfayı görüntülemek için giriş yapmalısınız.</p>
+                    <button onclick="showPage('login')">Giriş Yap</button>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="container">
+                <h2>Kullanıcı Dashboard</h2>
+                <div class="dashboard-content">
+                    <div class="user-info">
+                        <h3>Kullanıcı Bilgileri</h3>
+                        <p><strong>Email:</strong> ${this.userInfo.email}</p>
+                        <p><strong>Kullanıcı ID:</strong> ${this.userInfo.id}</p>
+                    </div>
+                    
+                    <div class="dashboard-actions">
+                        <h3>Hızlı İşlemler</h3>
+                        <button onclick="showPage('new-topic')" class="btn">Yeni Konu Aç</button>
+                        <button onclick="showPage('categories')" class="btn">Kategorileri Görüntüle</button>
+                    </div>
+                    
+                    <div class="recent-activity">
+                        <h3>Son Aktiviteler</h3>
+                        <p>Henüz aktivite bulunmuyor.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 }
 
 // Global fonksiyonlar
@@ -173,8 +292,10 @@ function handleLogin() {
                 
                 if (data.token) {
                     localStorage.setItem("token", data.token);
+                
+                    pageManager.checkLoginStatus();
                     alert("Giriş başarılı!");
-                    showPage('home');
+                    showPage('dashboard');
                 }
             });
         } else {
@@ -231,6 +352,10 @@ function handleNewTopic() {
     // Yeni konu oluşturma API çağrısı burada yapılacak
     alert('Konu başarıyla oluşturuldu!');
     showPage('home');
+}
+
+function handleLogout() {
+    pageManager.logout();
 }
 
 // Sayfa yöneticisini başlat
