@@ -340,6 +340,12 @@ function handleRegister() {
 }
 
 function handleNewTopic() {
+    if (!pageManager.isLoggedIn) {
+        alert('Yeni konu oluşturmak için giriş yapmalısınız!');
+        showPage('login');
+        return;
+    }
+
     const title = document.getElementById('topic-title').value.trim();
     const category = document.getElementById('topic-category').value;
     const content = document.getElementById('topic-content').value.trim();
@@ -349,14 +355,42 @@ function handleNewTopic() {
         return;
     }
 
-    // Yeni konu oluşturma API çağrısı burada yapılacak
-    alert('Konu başarıyla oluşturuldu!');
-    showPage('home');
+    console.log("Topic bilgileri : ", {title, category, content})  ;
+
+    fetch("http://localhost:5000/posts",{
+        method: 'POST' ,
+        headers : {
+            'Content-Type' : 'application/json',
+            'Authorization': `Bearer ${token}`
+        }, 
+        body: JSON.stringify({title, category, content}) 
+    })
+    .then (res => {
+        if (res.ok) {
+            return res.json().then(data => { 
+                alert('Konu başarıyla oluşturuldu!');
+                document.getElementById('topic-title').value = '';
+                document.getElementById('topic-category').value = '';
+                document.getElementById('topic-content').value = '';
+                showPage('home');
+            } );
+        }
+        else{
+            return res.json().then(data=> {
+                alert('Konu oluşturma hatası: ' + (data.message || 'Bilinmeyen hata'));
+                console.error('Post oluşturma hatası:', data);
+            })
+        }
+    })
+    .catch(error => {
+        console.error('Fetch hatası:', error);
+        alert('Ağ hatası: ' + error.message);
+    }); 
+
 }
 
 function handleLogout() {
     pageManager.logout();
 }
 
-// Sayfa yöneticisini başlat
 const pageManager = new PageManager(); 

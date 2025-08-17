@@ -25,8 +25,13 @@ mongoose.connect('mongodb://127.0.0.1:27017/blogdb', {
   useNewUrlParser: true, 
   useUnifiedTopology: true 
 })
-.then(() => console.log("MongoDB'ye bağlandı"))
-.catch(err => console.error("MongoDB bağlantı hatası:", err));
+.then(() => {
+  console.log(" MongoDB'ye bağlandı");
+})
+.catch(err => {
+  console.error(" MongoDB bağlantı hatası:", err);
+  process.exit(1);
+});
 
 
 
@@ -114,32 +119,65 @@ const Post = require("./models/Posts") ;
 app.post("/posts", authMiddleware , 
   [ 
     body('title').notEmpty().withMessage("Başlık boş kalamaz"),
+    body('category').notEmpty().withMessage("Kategori bos kalamaz"),
     body('content').notEmpty().withMessage("Content boş kalamaz")
+    
   ],
   
   async (req,res)=>{
-  const {title ,content}= req.body ; 
-  if (!title || !content) return res.status(400).json({ message: 'Title ve content gerekli.' });
+         console.log("=== POST /posts çağrıldı ===");
+         console.log("Request body:", req.body);
+         console.log("User bilgileri:", req.user);
 
+  const errors = validationResult(req) ; 
+   if (!errors.isEmpty())
+      {       
+         console.log("Validation hatası:", errors.array());
+
+        return res.status(400).json({errors : errors.array()}); 
+      }   
+    const {title , category , content}= req.body ; 
+  if (!title || !content || !category) return res.status(400).json({ message: 'Title ve content ve category gerekli.' });
+console.log("islem basarili") ;
+
+  console.log("User bilgileri:", req.user);
   const authorId = req.user.id ;
   const author = await User.findById(req.user.id) ;
+  
+  if (!author) {
+    return res.status(400).json({ message: 'Kullanıcı bulunamadı' });
+  }
+  
   const newPost = new Post({
     title,
     content,
-    authorId: author._id,
+    category,
+    authorId,
     authorUsername: author.username
   });
+console.log("Post oluşturuluyor:", newPost);
 
-await newPost.save() ;
-
-res.status(201).json({message: "Post atıldı" }) ; 
+try {
+  const savedPost = await newPost.save();
+  console.log("Post başarıyla kaydedildi:", savedPost);
+  res.status(201).json({message: "Post atıldı", post: savedPost});
+} catch (error) {
+  console.error("Post kaydetme hatası:", error);
+  res.status(500).json({message: "Post kaydedilemedi", error: error.message});
+} 
 
 })
 
 // Get all posts (public)
 app.get('/posts', async (req, res) => {
-  const list = await Post.find().sort({ createdAt: -1 });
-  res.json(list);
+  try {
+    const list = await Post.find().sort({ createdAt: -1 });
+    console.log(`📊 Posts collection'ında ${list.length} adet post bulundu`);
+    res.json(list);
+  } catch (error) {
+    console.error('Posts getirme hatası:', error);
+    res.status(500).json({message: 'Posts getirilemedi'});
+  }
 });
 
 app.get('/posts/:id' , async (req, res) => {
