@@ -172,11 +172,22 @@ try {
 app.get('/posts', async (req, res) => {
   try {
     const list = await Post.find().sort({ createdAt: -1 });
-    console.log(`📊 Posts collection'ında ${list.length} adet post bulundu`);
+    console.log(` Posts collection'ında ${list.length} adet post bulundu`);
     res.json(list);
   } catch (error) {
     console.error('Posts getirme hatası:', error);
     res.status(500).json({message: 'Posts getirilemedi'});
+  }
+});
+
+app.get('/posts/my-posts', authMiddleware, async (req, res) => {
+  try {
+    const posts = await Post.find({ authorId: req.user.id }).sort({ createdAt: -1 });
+    console.log(` Kullanıcı ${req.user.id} için ${posts.length} post bulundu`);
+    res.json(posts);
+  } catch (error) {
+    console.error('Kullanıcı postları getirme hatası:', error);
+    res.status(500).json({message: 'Postlar getirilemedi'});
   }
 });
 
