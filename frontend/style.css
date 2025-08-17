@@ -326,6 +326,7 @@ nav a.active {
     font-style: italic;
 }
 
+/* Çıkış butonu stili */
 .btn-logout {
     background: #f44336 !important;
     color: white !important;
@@ -336,4 +337,88 @@ nav a.active {
 .btn-logout:hover {
     background: #d32f2f !important;
     text-decoration: none !important;
+}
+
+.post-item {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-left: 4px solid #ff9800;
+}
+
+.post-item h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.post-item h3 a {
+    text-decoration: none;
+    color: #333;
+    transition: color 0.3s;
+}
+
+.post-item h3 a:hover {
+    color: #ff9800;
+}
+
+.post-meta {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.post-meta .category {
+    background: #ff9800;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.post-meta .date {
+    color: #999;
+}
+
+.post-excerpt {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.post-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-edit {
+    background: #4CAF50;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+
+.btn-edit:hover {
+    background: #45a049;
+}
+
+.btn-delete {
+    background: #f44336;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+
+.btn-delete:hover {
+    background: #d32f2f;
 }

@@ -191,6 +191,7 @@ app.get('/posts/my-posts', authMiddleware, async (req, res) => {
   }
 });
 
+
 app.get('/posts/:id' , async (req, res) => {
   const post = await Post.findById(req.params.id);
   if (!post) return res.status(404).json({message : "Post bulunamadi"}) ; 
@@ -205,6 +206,7 @@ app.put('/posts/:id',authMiddleware, async (req, res) => {
     return res.status(403).json({message : " Bu gönderiyi düzenleme hakkınız yok"}) ; 
 
   if (req.body.title) post.title = req.body.title;
+  if (req.body.category) post.category= req.body.category ;
   if (req.body.content) post.content = req.body.content;
   await post.save();
 
@@ -309,6 +311,8 @@ res.json({likes : post.likes.length, dislikes : post.dislikes.length});
 })
 
 ) 
+
+
 
 app.put ('/users/me', authMiddleware, 
   [

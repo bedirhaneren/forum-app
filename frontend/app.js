@@ -91,6 +91,10 @@ class PageManager {
         
         // Aktif nav linkini güncelle
         this.updateActiveNav(pageName);
+
+        if (pageName === 'my-topics' && this.isLoggedIn) {
+            this.loadMyTopics();
+        }
     }
 
     updateActiveNav(pageName) {
@@ -120,6 +124,8 @@ class PageManager {
                 return this.getNewTopicPage();
             case 'dashboard':
                 return this.getDashboardPage();
+            case 'my-topics': 
+                return this.getMyTopicsPage();
             default:
                 return this.getHomePage();
         }
@@ -259,6 +265,8 @@ class PageManager {
                         <h3>Hızlı İşlemler</h3>
                         <button onclick="showPage('new-topic')" class="btn">Yeni Konu Aç</button>
                         <button onclick="showPage('categories')" class="btn">Kategorileri Görüntüle</button>
+                        <button onclick = "showPage('my-topics')" class = "btn"> Açtığım Konuları Görüntüle</button>
+                        
                     </div>
                     
                     <div class="recent-activity">
@@ -268,6 +276,75 @@ class PageManager {
                 </div>
             </div>
         `;
+    }
+
+    getMyTopicsPage() {
+        if (!this.isLoggedIn) {
+            return `
+                <div class="container">
+                    <h2>Erişim Reddedildi</h2>
+                    <p>Bu sayfayı görüntülemek için giriş yapmalısınız.</p>
+                    <button onclick="showPage('login')" class="btn">Giriş Yap</button>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="container">
+                <h2>Açtığım Konular</h2>
+                <div id="my-topics-list">
+                    <p>Konular yükleniyor...</p>
+                </div>
+            </div>
+        `;
+    }
+
+    async loadMyTopics() {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:5000/posts/my-posts', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const posts = await response.json();
+                this.displayMyTopics(posts);
+            } else {
+                console.error('Konular yüklenemedi');
+                document.getElementById('my-topics-list').innerHTML = '<p>Konular yüklenemedi.</p>';
+            }
+        } catch (error) {
+            console.error('Hata:', error);
+            document.getElementById('my-topics-list').innerHTML = '<p>Bir hata oluştu.</p>';
+        }
+    }
+
+    displayMyTopics(posts) {
+        const container = document.getElementById('my-topics-list');
+        
+        if (posts.length === 0) {
+            container.innerHTML = '<p>Henüz konu açmamışsınız.</p>';
+            return;
+        }
+
+        const postsHTML = posts.map(post => `
+            <div class="post-item">
+                <h3><a href="#" onclick="showPost('${post._id}')">${post.title}</a></h3>
+                <p class="post-meta">
+                    <span class="category">${post.category}</span> • 
+                    <span class="date">${new Date(post.createdAt).toLocaleDateString('tr-TR')}</span>
+                </p>
+                <p class="post-excerpt">${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}</p>
+                <div class="post-actions">
+                    <button onclick="editPost('${post._id}')" class="btn btn-edit">Düzenle</button>
+                    <button onclick="deletePost('${post._id}')" class="btn btn-delete">Sil</button>
+                </div>
+            </div>
+        `).join('');
+
+        container.innerHTML = postsHTML;
     }
 }
 
@@ -356,7 +433,9 @@ function handleNewTopic() {
     }
 
     console.log("Topic bilgileri : ", {title, category, content})  ;
-
+    
+    const token = localStorage.getItem('token');
+    
     fetch("http://localhost:5000/posts",{
         method: 'POST' ,
         headers : {
@@ -387,6 +466,27 @@ function handleNewTopic() {
         alert('Ağ hatası: ' + error.message);
     }); 
 
+}
+function editPost(postId) {
+            if (!this.isLoggedIn) {
+            return `
+                <div class="container">
+                    <h2>Erişim Reddedildi</h2>
+                    <p>Bu sayfayı görüntülemek için giriş yapmalısınız.</p>
+                    <button onclick="showPage('login')" class="btn">Giriş Yap</button>
+                </div>
+            `;
+        }
+
+
+                return `
+            <div class="container">
+                <h2>Konuyu düzenle</h2>
+                <div id="edit-topics">
+                    <p>Konu yükleniyor...</p>
+                </div>
+            </div>
+        `;
 }
 
 function handleLogout() {
