@@ -94,7 +94,7 @@ class PageManager {
         return `
             <div class="form-container">
                 <h2>Giriş Yap</h2>
-                <input type="text" id="username" placeholder="Kullanıcı adı">
+                <input type="email" id="username" placeholder="E-posta adresi">
                 <input type="password" id="password" placeholder="Şifre">
                 <button onclick="handleLogin()">Giriş Yap</button>
                 <p id="message"></p>
@@ -158,22 +158,29 @@ function showPage(pageName) {
 }
 
 function handleLogin() {
-    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
 
     fetch('http://localhost:5000/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ email, password })
     })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById('message').innerText = data.message || JSON.stringify(data);
-        
-        if (data.token) {
-            localStorage.setItem("token", data.token);
-            alert("Giriş başarılı!");
-            showPage('home');
+    .then(res => {
+        if (res.ok) {
+            return res.json().then(data => {
+                document.getElementById('message').innerText = data.message || "Giriş başarılı!";
+                
+                if (data.token) {
+                    localStorage.setItem("token", data.token);
+                    alert("Giriş başarılı!");
+                    showPage('home');
+                }
+            });
+        } else {
+            return res.json().then(data => {
+                document.getElementById('message').innerText = data.message || "Giriş hatası!";
+            });
         }
     })
     .catch(error => {
@@ -186,18 +193,24 @@ function handleRegister() {
     const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value.trim();
 
+    console.log('Kayıt verileri:', { username, email, password });
+
     fetch('http://localhost:5000/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password })
     })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById('reg-message').innerText = data.message || JSON.stringify(data);
-        
+    .then(res => {
         if (res.ok) {
-            alert("Kayıt başarılı! Giriş yapabilirsiniz.");
-            showPage('login');
+            return res.json().then(data => {
+                document.getElementById('reg-message').innerText = data.message || "Kayıt başarılı!";
+                alert("Kayıt başarılı! Giriş yapabilirsiniz.");
+                showPage('login');
+            });
+        } else {
+            return res.json().then(data => {
+                document.getElementById('reg-message').innerText = data.message || "Kayıt hatası!";
+            });
         }
     })
     .catch(error => {
