@@ -4,7 +4,69 @@ class PageManager {
         this.currentPage = 'home';  
         this.isLoggedIn = false;
         this.userInfo = null;
+        this.editingPostId = null;
         this.init();
+    }
+
+    getEditPostPage() {
+        if (!this.isLoggedIn) {
+            return `
+                <div class="container">
+                    <h2>Erişim Reddedildi</h2>
+                    <p>Bu sayfayı görüntülemek için giriş yapmalısınız.</p>
+                    <button onclick=\"showPage('login')\" class=\"btn\">Giriş Yap</button>
+                </div>
+            `;
+        }
+
+        return `
+            <div class=\"container\">
+                <h2>Konuyu Düzenle</h2>
+                <div class=\"new-topic-form\">
+                    <input type=\"text\" id=\"edit-title\" placeholder=\"Konu başlığı\">
+                    <select id=\"edit-category\">
+                        <option value=\"\">Kategori seçin</option>
+                        <option value=\"tech\">Teknoloji</option>
+                        <option value=\"science\">Bilim</option>
+                    </select>
+                    <textarea id=\"edit-content\" placeholder=\"Konu içeriği\"></textarea>
+                    <button onclick=\"handleUpdatePost()\">Güncelle</button>
+                </div>
+            </div>
+        `;
+    }
+
+    async loadPostForEdit() {
+        try {
+            if (!this.editingPostId) {
+                alert('Düzenlenecek gönderi bulunamadı.');
+                this.showPage('my-topics');
+                return;
+            }
+
+            const response = await fetch(`http://localhost:5000/posts/${this.editingPostId}`);
+            if (!response.ok) {
+                alert('Gönderi getirilemedi.');
+                this.showPage('my-topics');
+                return;
+            }
+
+            const post = await response.json();
+
+            const titleInput = document.getElementById('edit-title');
+            const categorySelect = document.getElementById('edit-category');
+            const contentTextarea = document.getElementById('edit-content');
+
+            if (titleInput && categorySelect && contentTextarea) {
+                titleInput.value = post.title || '';
+                categorySelect.value = post.category || '';
+                contentTextarea.value = post.content || '';
+            }
+        } catch (error) {
+            console.error('Düzenleme için post yükleme hatası:', error);
+            alert('Bir hata oluştu.');
+            this.showPage('my-topics');
+        }
     }
 
     init() {
@@ -95,6 +157,10 @@ class PageManager {
         if (pageName === 'my-topics' && this.isLoggedIn) {
             this.loadMyTopics();
         }
+
+        if (pageName === 'edit-post' && this.isLoggedIn) {
+            this.loadPostForEdit();
+        }
     }
 
     updateActiveNav(pageName) {
@@ -126,6 +192,8 @@ class PageManager {
                 return this.getDashboardPage();
             case 'my-topics': 
                 return this.getMyTopicsPage();
+            case 'edit-post':
+                return this.getEditPostPage();
             default:
                 return this.getHomePage();
         }
@@ -468,25 +536,51 @@ function handleNewTopic() {
 
 }
 function editPost(postId) {
-            if (!this.isLoggedIn) {
-            return `
-                <div class="container">
-                    <h2>Erişim Reddedildi</h2>
-                    <p>Bu sayfayı görüntülemek için giriş yapmalısınız.</p>
-                    <button onclick="showPage('login')" class="btn">Giriş Yap</button>
-                </div>
-            `;
-        }
+    if (!pageManager.isLoggedIn) {
+        alert('Düzenlemek için giriş yapmalısınız.');
+        showPage('login');
+        return;
+    }
+    pageManager.editingPostId = postId;
+    showPage('edit-post');
+}
 
+function handleUpdatePost() {
+    if (!pageManager.isLoggedIn) {
+        alert('Düzenlemek için giriş yapmalısınız.');
+        showPage('login');
+        return;
+    }
 
-                return `
-            <div class="container">
-                <h2>Konuyu düzenle</h2>
-                <div id="edit-topics">
-                    <p>Konu yükleniyor...</p>
-                </div>
-            </div>
-        `;
+    const title = document.getElementById('edit-title').value.trim();
+    const category = document.getElementById('edit-category').value;
+    const content = document.getElementById('edit-content').value.trim();
+
+    if (!title || !category || !content) {
+        alert('Lütfen tüm alanları doldurun!');
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    fetch(`http://localhost:5000/posts/${pageManager.editingPostId}` , {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ title, category, content })
+    })
+    .then(res => {
+        if (res.ok) return res.json();
+        return res.json().then(data => { throw new Error(data.message || 'Güncelleme başarısız'); });
+    })
+    .then(() => {
+        alert('Gönderi güncellendi');
+        showPage('my-topics');
+    })
+    .catch(err => {
+        alert('Hata: ' + err.message);
+    });
 }
 
 function handleLogout() {
