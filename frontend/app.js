@@ -161,6 +161,10 @@ class PageManager {
         if (pageName === 'edit-post' && this.isLoggedIn) {
             this.loadPostForEdit();
         }
+
+        if (pageName === 'home') {
+            this.loadHomePosts();
+        }
     }
 
     updateActiveNav(pageName) {
@@ -175,6 +179,7 @@ class PageManager {
             activeLink.classList.add('active');
         }
     }
+
 
     getPageContent(pageName) {
         switch (pageName) {
@@ -199,16 +204,19 @@ class PageManager {
         }
     }
 
-    getHomePage() {
+  getHomePage() {
         if (this.isLoggedIn) {
             return `
                 <div class="container">
                     <main>
-                        <div class="content">
+                        <div class="content" id="home-container">
                             <div class="post">
                                 <h3><a href="#">Hoş Geldiniz, ${this.userInfo.email}!</a></h3>
                                 <p>MyForum'a hoş geldiniz. Tartışmalara katılmak için dashboard'ı kullanabilirsiniz.</p>
                                 <div class="meta">Son güncelleme: Bugün</div>
+                            </div>
+                            <div id="posts-list">
+                                <p>Konular yükleniyor...</p>
                             </div>
                         </div>
                         <div class="sidebar">
@@ -226,11 +234,14 @@ class PageManager {
             return `
                 <div class="container">
                     <main>
-                        <div class="content">
+                        <div class="content" id="home-container">
                             <div class="post">
                                 <h3><a href="#">Hoş Geldiniz!</a></h3>
                                 <p>MyForum'a hoş geldiniz. Tartışmalara katılmak için giriş yapın.</p>
                                 <div class="meta">Son güncelleme: Bugün</div>
+                            </div>
+                            <div id="posts-list">
+                                <p>Konular yükleniyor...</p>
                             </div>
                         </div>
                         <div class="sidebar">
@@ -246,6 +257,7 @@ class PageManager {
             `;
         }
     }
+
 
     getLoginPage() {
         return `
@@ -367,6 +379,28 @@ class PageManager {
         `;
     }
 
+    async loadHomePosts() {
+        try {
+            const response = await fetch('http://localhost:5000/posts');
+            if (response.ok) {
+                const posts = await response.json();
+                this.displayHomePosts(posts);
+            } else {
+                console.error('Ana sayfa konuları yüklenemedi');
+                const postsList = document.getElementById('posts-list');
+                if (postsList) {
+                    postsList.innerHTML = '<p>Konular yüklenemedi.</p>';
+                }
+            }
+        } catch (error) {
+            console.error('Ana sayfa yükleme hatası:', error);
+            const postsList = document.getElementById('posts-list');
+            if (postsList) {
+                postsList.innerHTML = '<p>Bir hata oluştu.</p>';
+            }
+        }
+    }
+
     async loadMyTopics() {
         try {
             const token = localStorage.getItem('token');
@@ -383,10 +417,38 @@ class PageManager {
                 console.error('Konular yüklenemedi');
                 document.getElementById('my-topics-list').innerHTML = '<p>Konular yüklenemedi.</p>';
             }
-        } catch (error) {
+        } catch (response) {
             console.error('Hata:', error);
             document.getElementById('my-topics-list').innerHTML = '<p>Bir hata oluştu.</p>';
         }
+    }
+
+    displayHomePosts(posts) {
+        const container = document.getElementById('posts-list');
+        
+        if (!container) {
+            console.error('posts-list elementi bulunamadı');
+            return;
+        }
+        
+        if (posts.length === 0) {
+            container.innerHTML = '<p>Henüz konu açılmamış.</p>';
+            return;
+        }
+
+        const postsHTML = posts.map(post => `
+            <div class="post-item">
+                <h3><a href="#" onclick="showPost('${post._id}')">${post.title}</a></h3>
+                <p class="post-meta">
+                    <span class="category">${post.category}</span> • 
+                    <span class="date">${new Date(post.createdAt).toLocaleDateString('tr-TR')}</span>
+                    <span class="author">Yazar: ${post.authorUsername || 'Anonim'}</span>
+                </p>
+                <p class="post-excerpt">${post.content.substring(0, 150)}${post.content.length > 150 ? '...' : ''}</p>
+            </div>
+        `).join('');
+
+        container.innerHTML = postsHTML;
     }
 
     displayMyTopics(posts) {
@@ -421,6 +483,47 @@ function showPage(pageName) {
     pageManager.showPage(pageName);
 }
 
+async function fetchPosts(){
+    try {
+        const response = fetch("http://localhost:5000")
+        if(!response.ok) throw new Error ("Postlar alınamadı") ;
+        // ! response json değil response objesi dönüyor.
+
+
+        const posts = (await response).json() ; 
+        return posts  ;
+     }
+
+
+     catch(err) {
+        console.error("Hata kodu : " , err) ; 
+        return []; 
+     }
+}
+
+
+async function renderHomePage() {
+             const posts = await fetchPosts();
+        if (!posts) throw new Error("Postlar yüklenemedi,") ;
+
+        const container = document.getElementById('home-container'); 
+        container.innerHTML = "" ; 
+        
+        posts.forEach(post => {
+    const div = document.createElement("div");
+    div.classList.add("post-card");
+    div.innerHTML = `
+        <h2>${post.title}</h2>
+        <p>${post.content}</p>
+        <small>Yazar: ${post.author || "Anonim"}</small>
+        <hr>
+    `;
+    container.appendChild(div);
+});
+
+
+
+        }
 function handleLogin() {
     const email = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
@@ -581,6 +684,12 @@ function handleUpdatePost() {
     .catch(err => {
         alert('Hata: ' + err.message);
     });
+}
+
+function showPost(postId) {
+    // Post detay sayfasını göstermek için bu fonksiyonu kullanabilirsiniz
+    // Şimdilik sadece alert gösteriyoruz
+    alert(`Post ID: ${postId} - Bu özellik henüz geliştirilmedi.`);
 }
 
 function handleLogout() {
