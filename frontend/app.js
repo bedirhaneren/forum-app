@@ -132,16 +132,42 @@ class PageManager {
     }
 
     handleHashChange() {
-        const hash = window.location.hash.slice(1) || 'home';
-        this.showPage(hash);
+        const hash = window.location.hash.slice(1);
+        console.log('Hash değişti:', hash); // Debug için
+        
+        // show-post=ID formatı için özel işlem
+        if (hash.startsWith('show-post=')) {
+            console.log('Show-post sayfası açılıyor...'); // Debug için
+            this.showPage('show-post');
+            // currentPostId'yi güncelle ve detayları yükle
+            const postId = window.location.hash.replace('#show-post=', '');
+            if (postId) {
+                this.currentPostId = postId;
+                setTimeout(() => {
+                    this.loadPostDetails();
+                }, 100);
+            }
+            return;
+        }
+        
+        const pageName = hash || 'home';
+        console.log('Sayfa açılıyor:', pageName); // Debug için
+        this.showPage(pageName);
     }
 
     showPage(pageName) {
         this.currentPage = pageName;
         
         // URL'i güncelle
-        if (window.location.hash !== `#${pageName}`) {
-            window.location.hash = pageName;
+        // Not: show-post sayfasında #show-post=ID formatını koru; hash'i ezme
+        if (pageName === 'show-post') {
+            if (!window.location.hash.startsWith('#show-post=')) {
+                window.location.hash = 'show-post';
+            }
+        } else {
+            if (window.location.hash !== `#${pageName}`) {
+                window.location.hash = pageName;
+            }
         }
 
         // Sayfa içeriğini yükle
@@ -164,6 +190,11 @@ class PageManager {
 
         if (pageName === 'home') {
             this.loadHomePosts();
+        }
+
+        if (pageName === 'show-post') {
+            // Post detayları showPost fonksiyonunda yükleniyor
+            console.log('Show-post sayfası yüklendi');
         }
     }
 
@@ -199,6 +230,8 @@ class PageManager {
                 return this.getMyTopicsPage();
             case 'edit-post':
                 return this.getEditPostPage();
+            case 'show-post':
+                return this.getShowPostPage();
             default:
                 return this.getHomePage();
         }
@@ -379,6 +412,43 @@ class PageManager {
         `;
     }
 
+    getShowPostPage() {
+        return `
+            <div class="container">
+                <div class="post-detail-container">
+                    <div class="post-header">
+                        <button onclick="showPage('home')" class="btn btn-back">← Ana Sayfaya Dön</button>
+                        <h2 id="post-title">Konu yükleniyor...</h2>
+                    </div>
+                    <div class="post-meta" id="post-meta">
+                        <p>Yükleniyor...</p>
+                    </div>
+                    <div class="post-content" id="post-content">
+                        <p>İçerik yükleniyor...</p>
+                    </div>
+                    <div class="post-actions" id="post-actions">
+                        <!-- Post sahibi ise düzenleme ve silme butonları burada görünecek -->
+                    </div>
+                    <div class="comments-section">
+                        <h3>Yorumlar</h3>
+                        <div id="comments-list">
+                            <p>Yorumlar yükleniyor...</p>
+                        </div>
+                        ${this.isLoggedIn ? `
+                            <div class="add-comment">
+                                <h4>Yorum Ekle</h4>
+                                <textarea id="comment-content" placeholder="Yorumunuzu yazın..."></textarea>
+                                <button onclick="addComment()" class="btn">Yorum Ekle</button>
+                            </div>
+                        ` : `
+                            <p>Yorum yapmak için <a href="#" onclick="showPage('login')">giriş yapın</a>.</p>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     async loadHomePosts() {
         try {
             const response = await fetch('http://localhost:5000/posts');
@@ -423,6 +493,191 @@ class PageManager {
         }
     }
 
+    async loadPostDetails() {
+        try {
+            console.log('loadPostDetails başladı');
+            
+            // Hash'ten post ID'yi al
+            const hash = window.location.hash;
+            console.log('Hash:', hash); // Debug için
+            
+            let postId;
+            if (hash.startsWith('#show-post=')) {
+                postId = hash.replace('#show-post=', '');
+            } else if (hash.includes('=')) {
+                postId = hash.split('=')[1];
+            } else {
+                // Hash'te = yoksa, hash'in kendisini kullan
+                postId = hash.replace('#', '');
+            }
+            
+            console.log('Post ID:', postId); // Debug için
+            
+            if (!postId || postId === 'show-post' || postId === '') {
+                console.error('Post ID bulunamadı!');
+                this.showPage('home');
+                return;
+            }
+
+            // Yorum ve diğer işlemler için currentPostId'yi güncelle
+            this.currentPostId = postId;
+
+            console.log('Fetch başlıyor:', `http://localhost:5000/posts/${postId}`);
+            
+            // Post detaylarını yükle
+            const response = await fetch(`http://localhost:5000/posts/${postId}`);
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                console.error('Post bulunamadı! Status:', response.status);
+                this.showPage('home');
+                return;
+            }
+
+            const post = await response.json();
+            console.log('Post alındı:', post);
+            this.displayPostDetails(post);
+
+            // Yorumları yükle
+            this.loadComments(postId);
+
+        } catch (error) {
+            console.error('Post detayları yükleme hatası:', error);
+            this.showPage('home');
+        }
+    }
+
+     async loadPostDetailsDirect(postId) {
+        try {
+            console.log('loadPostDetailsDirect başladı, postId:', postId);
+            
+            if (!postId) {
+                console.error('Post ID bulunamadı!');
+                return;
+            }
+
+            // Yorum ve diğer işlemler için currentPostId'yi güncelle
+            this.currentPostId = postId;
+
+            console.log('Fetch başlıyor:', `http://localhost:5000/posts/${postId}`);
+            
+            // Post detaylarını yükle
+            const response = await fetch(`http://localhost:5000/posts/${postId}`);
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                console.error('Post bulunamadı! Status:', response.status);
+                return;
+            }
+
+            const post = await response.json();
+            console.log('Post alındı:', post);
+            this.displayPostDetails(post);
+
+            // Yorumları yükle
+            this.loadComments(postId);
+
+        } catch (error) {
+            console.error('Post detayları yükleme hatası:', error);
+        }
+    }
+
+    displayPostDetails(post) {
+        console.log('displayPostDetails başladı, post:', post);
+        
+        // Post başlığı
+        const titleElement = document.getElementById('post-title');
+        console.log('titleElement:', titleElement);
+        if (titleElement) {
+            titleElement.textContent = post.title;
+            console.log('Başlık güncellendi');
+        }
+
+        // Post meta bilgileri
+        const metaElement = document.getElementById('post-meta');
+        console.log('metaElement:', metaElement);
+        if (metaElement) {
+            metaElement.innerHTML = `
+                <p>
+                    <span class="category">${post.category}</span> • 
+                    <span class="date">${new Date(post.createdAt).toLocaleDateString('tr-TR')}</span> • 
+                    <span class="author">Yazar: ${post.authorUsername || 'Anonim'}</span>
+                </p>
+            `;
+            console.log('Meta güncellendi');
+        }
+
+        // Post içeriği
+        const contentElement = document.getElementById('post-content');
+        console.log('contentElement:', contentElement);
+        if (contentElement) {
+            contentElement.innerHTML = `
+                <div class="post-text">${post.content}</div>
+            `;
+            console.log('İçerik güncellendi');
+        }
+
+        // Post sahibi ise düzenleme ve silme butonları
+        const actionsElement = document.getElementById('post-actions');
+        console.log('actionsElement:', actionsElement);
+        if (actionsElement && this.isLoggedIn && this.userInfo && this.userInfo.id === post.authorId) {
+            actionsElement.innerHTML = `
+                <button onclick="editPost('${post._id}')" class="btn btn-edit">Düzenle</button>
+                <button onclick="deletePost('${post._id}')" class="btn btn-delete">Sil</button>
+            `;
+            console.log('Aksiyonlar güncellendi');
+        } else if (actionsElement) {
+            actionsElement.innerHTML = '';
+            console.log('Aksiyonlar temizlendi');
+        }
+        
+        console.log('displayPostDetails tamamlandı');
+    }
+
+    async loadComments(postId) {
+        try {
+            const response = await fetch(`http://localhost:5000/posts/${postId}/comments`);
+            if (response.ok) {
+                const comments = await response.json();
+                this.displayComments(comments);
+            } else {
+                const commentsList = document.getElementById('comments-list');
+                if (commentsList) {
+                    commentsList.innerHTML = '<p>Yorumlar yüklenemedi.</p>';
+                }
+            }
+        } catch (error) {
+            console.error('Yorumlar yükleme hatası:', error);
+            const commentsList = document.getElementById('comments-list');
+            if (commentsList) {
+                commentsList.innerHTML = '<p>Yorumlar yüklenirken bir hata oluştu.</p>';
+            }
+        }
+    }
+
+    displayComments(comments) {
+        const commentsList = document.getElementById('comments-list');
+        
+        if (!commentsList) return;
+
+        if (comments.length === 0) {
+            commentsList.innerHTML = '<p>Henüz yorum yapılmamış.</p>';
+            return;
+        }
+
+        const commentsHTML = comments.map(comment => `
+            <div class="comment-item">
+                <div class="comment-header">
+                    <strong>${comment.authorUsername || 'Anonim'}</strong>
+                    <span class="comment-date">${new Date(comment.createdAt).toLocaleDateString('tr-TR')}</span>
+                </div>
+                <div class="comment-content">${comment.content}</div>
+            </div>
+        `).join('');
+
+        commentsList.innerHTML = commentsHTML;
+    }
+
     displayHomePosts(posts) {
         const container = document.getElementById('posts-list');
         
@@ -438,7 +693,7 @@ class PageManager {
 
         const postsHTML = posts.map(post => `
             <div class="post-item">
-                <h3><a href="#" onclick="showPost('${post._id}')">${post.title}</a></h3>
+                <h3><a href="#show-post=${post._id}" onclick="showPost('${post._id}')">${post.title}</a></h3>
                 <p class="post-meta">
                     <span class="category">${post.category}</span> • 
                     <span class="date">${new Date(post.createdAt).toLocaleDateString('tr-TR')}</span>
@@ -461,7 +716,7 @@ class PageManager {
 
         const postsHTML = posts.map(post => `
             <div class="post-item">
-                <h3><a href="#" onclick="showPost('${post._id}')">${post.title}</a></h3>
+                <h3><a href="#show-post=${post._id}" onclick="showPost('${post._id}')">${post.title}</a></h3>
                 <p class="post-meta">
                     <span class="category">${post.category}</span> • 
                     <span class="date">${new Date(post.createdAt).toLocaleDateString('tr-TR')}</span>
@@ -686,10 +941,116 @@ function handleUpdatePost() {
     });
 }
 
+function deletePost(postId) {
+    if (!pageManager.isLoggedIn) {
+        alert('Silmek için giriş yapmalısınız.');
+        showPage('login');
+        return;
+    }
+
+    if (!confirm('Bu gönderiyi silmek istediğinizden emin misiniz?')) {
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    fetch(`http://localhost:5000/posts/${postId}`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(res => {
+        if (res.ok) return res.json();
+        return res.json().then(data => { throw new Error(data.message || 'Silme başarısız'); });
+    })
+    .then(() => {
+        alert('Gönderi silindi');
+        showPage('my-topics');
+    })
+    .catch(err => {
+        alert('Hata: ' + err.message);
+    });
+}
+
 function showPost(postId) {
-    // Post detay sayfasını göstermek için bu fonksiyonu kullanabilirsiniz
-    // Şimdilik sadece alert gösteriyoruz
-    alert(`Post ID: ${postId} - Bu özellik henüz geliştirilmedi.`);
+    console.log('showPost çağrıldı, Post ID:', postId); // Debug için
+    
+    if (!postId) {
+        alert('Post ID bulunamadı!');
+        return;
+    }
+    
+    // Post ID'yi global olarak sakla
+    pageManager.currentPostId = postId;
+    
+    // Sayfayı göster
+    showPage('show-post');
+    
+    // Post detaylarını hemen yükle
+    setTimeout(() => {
+        pageManager.loadPostDetailsDirect(postId);
+    }, 200);
+}
+
+async function addComment() {
+    if (!pageManager.isLoggedIn) {
+        alert('Yorum yapmak için giriş yapmalısınız!');
+        showPage('login');
+        return;
+    }
+
+    const content = document.getElementById('comment-content').value.trim();
+    if (!content) {
+        alert('Lütfen yorum içeriği yazın!');
+        return;
+    }
+
+    // Önce pageManager.currentPostId'yi kullan, yoksa hash'ten al
+    let postId = pageManager.currentPostId;
+    if (!postId) {
+        const hash = window.location.hash;
+        if (hash.startsWith('#show-post=')) {
+            postId = hash.replace('#show-post=', '');
+        } else if (hash.includes('=')) {
+            postId = hash.split('=')[1];
+        } else {
+            postId = hash.replace('#', '');
+        }
+    }
+    
+    if (!postId || postId === 'show-post' || postId === '') {
+        alert('Post ID bulunamadı!');
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:5000/posts/${postId}/comments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ content })
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        if (response.ok) {
+            document.getElementById('comment-content').value = '';
+            alert('Yorum başarıyla eklendi!');
+            pageManager.loadComments(postId);
+        } else if (contentType.includes('application/json')) {
+            const data = await response.json();
+            alert('Yorum ekleme hatası: ' + (data.message || 'Bilinmeyen hata'));
+        } else {
+            const text = await response.text();
+            console.error('JSON olmayan hata yanıtı:', text);
+            alert('Yorum ekleme hatası: Sunucu beklenmeyen yanıt döndü');
+        }
+    } catch (error) {
+        console.error('Yorum ekleme hatası:', error);
+        alert('Ağ hatası: ' + error.message);
+    }
 }
 
 function handleLogout() {

@@ -422,3 +422,151 @@ nav a.active {
 .btn-delete:hover {
     background: #d32f2f;
 }
+
+/* Post Detay Sayfası Stilleri */
+.post-detail-container {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.post-header {
+    margin-bottom: 30px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 20px;
+}
+
+.btn-back {
+    background: #666;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 20px;
+    transition: background 0.3s;
+}
+
+.btn-back:hover {
+    background: #555;
+}
+
+.post-header h2 {
+    margin: 0;
+    color: #333;
+    font-size: 28px;
+    line-height: 1.3;
+}
+
+.post-meta {
+    margin-bottom: 25px;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 6px;
+}
+
+.post-meta p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.post-content {
+    margin-bottom: 30px;
+    line-height: 1.8;
+    color: #333;
+    font-size: 16px;
+}
+
+.post-text {
+    white-space: pre-wrap;
+}
+
+.comments-section {
+    border-top: 2px solid #f0f0f0;
+    padding-top: 30px;
+}
+
+.comments-section h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 22px;
+}
+
+.comment-item {
+    background: #f9f9f9;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border-left: 3px solid #ff9800;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.comment-header strong {
+    color: #333;
+    font-weight: 600;
+}
+
+.comment-date {
+    color: #999;
+    font-size: 12px;
+}
+
+.comment-content {
+    color: #555;
+    line-height: 1.6;
+}
+
+.add-comment {
+    margin-top: 25px;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 6px;
+}
+
+.add-comment h4 {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.add-comment textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+    margin-bottom: 15px;
+}
+
+.add-comment textarea:focus {
+    outline: none;
+    border-color: #ff9800;
+    box-shadow: 0 0 5px rgba(255, 152, 0, 0.3);
+}
+
+.add-comment .btn {
+    background: #ff9800;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+
+.add-comment .btn:hover {
+    background: #f57c00;
+}
