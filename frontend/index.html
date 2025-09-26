@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,8 +18,9 @@
                 <a href="#home" onclick="showPage('home')">Ana Sayfa</a>
                 <a href="#categories" onclick="showPage('categories')">Kategoriler</a>
                 <a href="#new-topic" onclick="showPage('new-topic')">Yeni Konu</a>
-                <a href="#login" onclick="showPage('login')">Giriş Yap</a>
-                <a href="#register" onclick="showPage('register')" class="btn">Kayıt Ol</a>
+                <span id="nav-spacer"></span>
+                <span id="nav-user"></span>
+                <a href="#" id="theme-toggle" onclick="toggleTheme(); return false;" title="Tema Değiştir">🌗</a>
             </nav>
         </div>
     </header>

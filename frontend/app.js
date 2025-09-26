@@ -104,12 +104,17 @@ class PageManager {
     updateNavigation() {
         const nav = document.querySelector('nav');
         if (this.isLoggedIn) {
+            const initials = (this.userInfo.email || '?').substring(0,1).toUpperCase();
+            const userLabel = this.userInfo.email;
             nav.innerHTML = `
                 <a href="#home" onclick="showPage('home')">Ana Sayfa</a>
                 <a href="#categories" onclick="showPage('categories')">Kategoriler</a>
                 <a href="#new-topic" onclick="showPage('new-topic')">Yeni Konu</a>
                 <a href="#dashboard" onclick="showPage('dashboard')">Dashboard</a>
+                <span id="nav-spacer"></span>
+                <span id="nav-user"><span class="avatar">${initials}</span> ${userLabel}</span>
                 <a href="#" onclick="handleLogout()" class="btn btn-logout">Çıkış Yap</a>
+                <a href="#" id="theme-toggle" onclick="toggleTheme(); return false;" title="Tema Değiştir">🌗</a>
             `;
         } else {
             nav.innerHTML = `
@@ -118,6 +123,8 @@ class PageManager {
                 <a href="#new-topic" onclick="showPage('new-topic')">Yeni Konu</a>
                 <a href="#login" onclick="showPage('login')">Giriş Yap</a>
                 <a href="#register" onclick="showPage('register')" class="btn">Kayıt Ol</a>
+                <span id="nav-spacer"></span>
+                <a href="#" id="theme-toggle" onclick="toggleTheme(); return false;" title="Tema Değiştir">🌗</a>
             `;
         }
         this.updateActiveNav(this.currentPage);
@@ -691,16 +698,27 @@ class PageManager {
             return;
         }
 
+        // Modern kart ızgarası ve animasyonlu kartlar
+        container.classList.add('cards-grid');
+
         const postsHTML = posts.map(post => `
-            <div class="post-item">
-                <h3><a href="#show-post=${post._id}" onclick="showPost('${post._id}')">${post.title}</a></h3>
-                <p class="post-meta">
-                    <span class="category">${post.category}</span> • 
-                    <span class="date">${new Date(post.createdAt).toLocaleDateString('tr-TR')}</span>
-                    <span class="author">Yazar: ${post.authorUsername || 'Anonim'}</span>
-                </p>
-                <p class="post-excerpt">${post.content.substring(0, 150)}${post.content.length > 150 ? '...' : ''}</p>
-            </div>
+            <article class="post-card reveal">
+                <div class="post-card-header">
+                    <a class="chip" href="#category=${post.category}" onclick="selectCategory('${post.category}'); return false;">${post.category}</a>
+                    <h3 class="post-card-title"><a href="#show-post=${post._id}" onclick="showPost('${post._id}')">${post.title}</a></h3>
+                    <div class="post-card-meta">
+                        <span class="author">${post.authorUsername || 'Anonim'}</span>
+                        <span class="dot">•</span>
+                        <span class="date">${new Date(post.createdAt).toLocaleDateString('tr-TR')}</span>
+                    </div>
+                </div>
+                <div class="post-card-body">
+                    <p class="post-excerpt">${post.content.substring(0, 200)}${post.content.length > 200 ? '...' : ''}</p>
+                </div>
+                <div class="post-card-footer">
+                    <button class="btn btn-ghost" onclick="showPost('${post._id}')">Detayları Gör</button>
+                </div>
+            </article>
         `).join('');
 
         container.innerHTML = postsHTML;
@@ -714,19 +732,24 @@ class PageManager {
             return;
         }
 
+        // Modern kartlar (Açtığım konular)
         const postsHTML = posts.map(post => `
-            <div class="post-item">
-                <h3><a href="#show-post=${post._id}" onclick="showPost('${post._id}')">${post.title}</a></h3>
-                <p class="post-meta">
-                    <span class="category">${post.category}</span> • 
-                    <span class="date">${new Date(post.createdAt).toLocaleDateString('tr-TR')}</span>
-                </p>
-                <p class="post-excerpt">${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}</p>
-                <div class="post-actions">
+            <article class="post-card reveal">
+                <div class="post-card-header">
+                    <a class="chip" href="#category=${post.category}" onclick="selectCategory('${post.category}'); return false;">${post.category}</a>
+                    <h3 class="post-card-title"><a href="#show-post=${post._id}" onclick="showPost('${post._id}')">${post.title}</a></h3>
+                    <div class="post-card-meta">
+                        <span class="date">${new Date(post.createdAt).toLocaleDateString('tr-TR')}</span>
+                    </div>
+                </div>
+                <div class="post-card-body">
+                    <p class="post-excerpt">${post.content.substring(0, 140)}${post.content.length > 140 ? '...' : ''}</p>
+                </div>
+                <div class="post-card-footer">
                     <button onclick="editPost('${post._id}')" class="btn btn-edit">Düzenle</button>
                     <button onclick="deletePost('${post._id}')" class="btn btn-delete">Sil</button>
                 </div>
-            </div>
+            </article>
         `).join('');
 
         container.innerHTML = postsHTML;

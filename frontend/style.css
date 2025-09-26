@@ -40,6 +40,32 @@ header nav a {
   margin: 0 10px;
 }
 
+#nav-spacer { display: inline-block; width: 12px; }
+
+#nav-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 8px;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 999px;
+}
+
+.avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ff9800;
+  color: #111;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+}
+
 header nav a.btn {
   background: #ff9800;
   padding: 6px 12px;
@@ -340,12 +366,7 @@ nav a.active {
 }
 
 .post-item {
-    background: white;
-    padding: 20px;
-    margin-bottom: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    border-left: 4px solid #ff9800;
+    /* eski stil - yerinde kalsın ama kullanılmayacak */
 }
 
 .post-item h3 {
@@ -386,6 +407,75 @@ nav a.active {
     color: #555;
     line-height: 1.6;
     margin-bottom: 15px;
+}
+
+/* Modern kart ızgarası ve kartlar */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.post-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(2,6,23,0.08);
+  border: 1px solid #e5e7eb;
+  padding: 18px;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.post-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(2,6,23,0.12);
+}
+
+.post-card-header .chip {
+  display: inline-block;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  text-decoration: none;
+}
+
+.post-card-title {
+  margin: 8px 0 6px 0;
+}
+.post-card-title a { color: #0f172a; text-decoration: none; }
+.post-card-title a:hover { color: #4f46e5; }
+
+.post-card-meta { color: #64748b; font-size: 13px; }
+.post-card-meta .dot { margin: 0 6px; }
+
+.post-card-body { color: #334155; }
+
+.post-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.btn.btn-ghost {
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  color: #0f172a;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.btn.btn-ghost:hover { background: #f8fafc; }
+
+/* Reveal animasyonu */
+.reveal { opacity: 0; transform: translateY(8px); animation: revealUp .5s ease forwards; }
+.reveal:nth-child(2) { animation-delay: .05s }
+.reveal:nth-child(3) { animation-delay: .1s }
+.reveal:nth-child(4) { animation-delay: .15s }
+
+@keyframes revealUp {
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .post-actions {
