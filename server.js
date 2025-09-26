@@ -193,9 +193,18 @@ app.get('/posts/my-posts', authMiddleware, async (req, res) => {
 
 
 app.get('/posts/:id' , async (req, res) => {
-  const post = await Post.findById(req.params.id);
-  if (!post) return res.status(404).json({message : "Post bulunamadi"}) ; 
-  res.json(post) ; 
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Geçersiz post id' });
+    }
+    const post = await Post.findById(id);
+    if (!post) return res.status(404).json({message : "Post bulunamadi"}) ; 
+    res.json(post) ; 
+  } catch (error) {
+    console.error('Post getirme hatası:', error);
+    res.status(500).json({ message: 'Post getirilemedi' });
+  }
 })
 
 app.put('/posts/:id',authMiddleware, async (req, res) => {
@@ -233,40 +242,60 @@ app.post ("/posts/:postId/comments" , authMiddleware ,
     body('content').notEmpty().withMessage('Yorum boş kalamaz')
   ]  ,
 async (req , res) => {
-  const errors = validationResult(req) ; 
-  if (! errors.isEmpty())
-  {
-    return res.status(400).json({errors : errors.array()}) ; 
+  try {
+    const errors = validationResult(req) ; 
+    if (! errors.isEmpty()) {
+      return res.status(400).json({errors : errors.array()}) ; 
+    }
+
+    const postId = req.params.postId ; 
+    const content = req.body.content ; 
+
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(400).json({ message: 'Geçersiz post id' });
+    }
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: 'Post bulunamadı' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(400).json({ message: 'Kullanıcı bulunamadı' });
+    }
+
+    console.log('Yorum ekleyen kullanıcı:', { id: user.id, username: user.username, email: user.email });
+
+    const comment = new Comment ({
+      postId,
+      authorId : req.user.id, 
+      authorUsername: (user && (user.username || user.email)) ? (user.username || user.email) : 'Anonim', 
+      content
+    }) ; 
+
+    await comment.save();
+    res.status(201).json({message: "Yorum başarıyla gönderildi"}); 
+  } catch (error) {
+    console.error('Yorum ekleme hatası:', error);
+    res.status(500).json({ message: 'Yorum eklenemedi' });
   }
-
-  const postId = req.params.postId ; 
-  const content = req.body.content ; 
-
-  const post = await Post.findById(postId)  ;
-  if (! post) return res.status(404).json({message : 'Post bulunamadı'
-  });
-
-  const comment = new Comment ({
-
-    postId,
-    authorId : req.user.id, 
-    authorUsername: req.user.username, 
-    content
-  }) ; 
-
-  await comment.save() ; 
-
-  res.status(201).json({message: "Yorum başarıyla gönderildi"}); 
-
 })
 
 // ! Bir postun tüm yorumları ------------ 
 app.get('/posts/:postId/comments', async (req, res) => 
 {
-  const postId = req.params.postId ;
-  const comments = await Comment.find({ postId }).sort({ createdAt: -1 });
-
-  res.json(comments) ;
+  try {
+    const postId = req.params.postId ;
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(400).json({ message: 'Geçersiz post id' });
+    }
+    const comments = await Comment.find({ postId }).sort({ createdAt: -1 });
+    res.json(comments) ;
+  } catch (error) {
+    console.error('Yorumları getirme hatası:', error);
+    res.status(500).json({ message: 'Yorumlar getirilemedi' });
+  }
 },
 
 // !!   Like atma route 
